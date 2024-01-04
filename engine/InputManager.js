@@ -48,6 +48,16 @@ export class InputManager extends SceneObject
     }
 
     /**
+     * Registers lmb press callbacks
+     * @param {Function} onPressEvent callback that is called whenever the mouse or touch cursor is pressed
+     */
+    registerLMBPressEvent(onPressEvent)
+    {
+        if (onPressEvent != null && onPressEvent != undefined)
+            this.cursorEvent.pressCallbacks[0].push(onPressEvent)
+    }
+
+    /**
      * Registers lmb hold movement callbacks
      * @param {Function} onMoveEvent callback that is called whenever the mouse or touch cursor is relocated
      */
@@ -55,6 +65,16 @@ export class InputManager extends SceneObject
     {
         if (onMoveEvent != null && onMoveEvent != undefined)
             this.cursorEvent.moveCallbacks[0].push(onMoveEvent)
+    }
+
+    /**
+     * Registers lmb release callbacks
+     * @param {Function} onReleaseEvent callback that is called whenever the mouse or touch cursor is released
+     */
+    registerLMBReleaseEvent(onReleaseEvent)
+    {
+        if (onReleaseEvent != null && onReleaseEvent != undefined)
+            this.cursorEvent.releaseCallbacks[0].push(onReleaseEvent)
     }
 
     /**
@@ -78,6 +98,16 @@ export class InputManager extends SceneObject
     }
 
     /**
+     * Registers rmb press callbacks
+     * @param {Function} onPressEvent callback that is called whenever the mouse or touch cursor is pressed
+     */
+    registerRMBPressEvent(onPressEvent)
+    {
+        if (onPressEvent != null && onPressEvent != undefined)
+            this.cursorEvent.pressCallbacks[2].push(onPressEvent)
+    }
+
+    /**
      * Registers rmb hold movement callbacks
      * @param {Function} onMoveEvent callback that is called whenever the user holds lmb button
      */
@@ -85,6 +115,16 @@ export class InputManager extends SceneObject
     {
         if (onMoveEvent != null && onMoveEvent != undefined)
             this.cursorEvent.moveCallbacks[2].push(onMoveEvent)
+    }
+
+    /**
+     * Registers rmb release callbacks
+     * @param {Function} onReleaseEvent callback that is called whenever the mouse or touch cursor is released
+     */
+    registerRMBReleaseEvent(onReleaseEvent)
+    {
+        if (onReleaseEvent != null && onReleaseEvent != undefined)
+            this.cursorEvent.releaseCallbacks[2].push(onReleaseEvent)
     }
 
     /**
@@ -108,6 +148,16 @@ export class InputManager extends SceneObject
     }
 
     /**
+     * Registers touch press callbacks
+     * @param {Function} onPressEvent callback that is called whenever the mouse or touch cursor is pressed
+     */
+    registerTouchPressEvent(onPressEvent)
+    {
+        if (onPressEvent != null && onPressEvent != undefined)
+            this.cursorEvent.pressCallbacks[3].push(onPressEvent)
+    }
+
+    /**
      * Registers touch movement callbacks
      * @param {Function} onTouchMove callback that is called whenever the mouse or touch cursor is relocated
      */
@@ -115,6 +165,16 @@ export class InputManager extends SceneObject
     {
         if (onTouchMove != null && onTouchMove != undefined)
             this.cursorEvent.moveCallbacks[3].push(onTouchMove)
+    }
+
+    /**
+     * Registers touch release callbacks
+     * @param {Function} onReleaseEvent callback that is called whenever the mouse or touch cursor is released
+     */
+    registerTouchReleaseEvent(onReleaseEvent)
+    {
+        if (onReleaseEvent != null && onReleaseEvent != undefined)
+            this.cursorEvent.releaseCallbacks[3].push(onReleaseEvent)
     }
 
     /**
@@ -157,7 +217,9 @@ class CursorEventCore
         this.lastXYs = [{ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }]
         this.sensitivity = 1
         this.clickCallbacks = [[],[],[],[]]
+        this.pressCallbacks = [[],[],[],[]]
         this.moveCallbacks = [[],[],[],[]]
+        this.releaseCallbacks = [[],[],[],[]]
         this.dblClickCallbacks = [[],[],[],[]]
         this.wheelCallbacks = []
         this.buttonPresses = [false, false, false, false]
@@ -199,6 +261,9 @@ class CursorEventCore
             }
             else
                 callbackIndex = event.button
+            let callbacks = this.pressCallbacks[callbackIndex]
+            for (let pressCallback of callbacks)
+                pressCallback(event.clientX, event.clientY)
             this.buttonPresses[callbackIndex] = true 
             this.buttonDblTapCounter[callbackIndex] = this.buttonDblTapCounter[callbackIndex] + 1
             if (this.buttonDblTapCounter[callbackIndex] > 2)
@@ -235,6 +300,9 @@ class CursorEventCore
         this.buttonPresses[event.button] = false
         this.firstClicks[event.button] = true
         this.lastXYs[event.button] = { x: 0, y: 0 }
+        let callbacks = this.releaseCallbacks[event.button]
+        for (let releaseCallback of callbacks)
+            releaseCallback(event)
     }
 
     /**

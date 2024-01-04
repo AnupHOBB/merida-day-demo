@@ -422,6 +422,15 @@ export class SceneManager
      */
     getMaxAnistropy() { this.sceneRenderer.getMaxAnistropy() }
 
+    raycastAndGetNearest(rasterCoord)
+    {
+        let bounds = this.canvas.getBoundingClientRect()
+        let ndcX = (rasterCoord.x / bounds.width) *  2 - 1
+        let ndcY = -(rasterCoord.y / bounds.height) *  2 + 1
+        let hitPointDataArray = this.raycast.raycast({x: ndcX, y: ndcY}, this.activeCameraManager)
+        return hitPointDataArray[0]
+    }
+
     /**
      * Checks any messages for the scene object in the notice board and sends that message to it if there is one.
      * @param {SceneObject} sceneObject sceneObject that needs to be notified if a message was posted for it.
