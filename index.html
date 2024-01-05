@@ -5,17 +5,26 @@
     </head>
     <body>
         <canvas id="scene"></canvas>
-        <div id="label-container">
-            <div id="label-menu-outer">
-                <p class="label-item">HANDLE</p>
-                <p class="label-item">FABRIC</p>
-                <p class="label-item">METAL FRAME</p>
+        <div id="side-bar">
+            <div class="side-bar-item">
+                <p class="side-bar-item-title">HANDLE POSITION</p>
+                <div id="menu-handle-position" class="color-menu">
+                    <label for="radio-left" class="radio-text">Left</label>
+                    <input id="radio-left" type="radio" checked/>
+                    <input id="radio-right" type="radio"/>
+                    <label for="radio-right" class="radio-text">Right</label>
+                </div>
             </div>
-        </div>
-        <div id="color-menu-container">
-            <div id="color-menu-outer">
+            <div class="side-bar-item">
+                <p class="side-bar-item-title">WOOD</p>
                 <div id="menu-wood" class="color-menu"></div>
+            </div>
+            <div class="side-bar-item">
+                <p class="side-bar-item-title">FABRIC</p>
                 <div id="menu-fabric" class="color-menu"></div>
+            </div>
+            <div class="side-bar-item">
+                <p class="side-bar-item-title">METAL</p>
                 <div id="menu-metal" class="color-menu"></div>
             </div>
         </div>

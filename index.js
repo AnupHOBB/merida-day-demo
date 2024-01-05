@@ -2,16 +2,17 @@ import * as THREE from './node_modules/three/src/Three.js'
 import * as ENGINE from './engine/Engine.js'
 import { GLTFLoader } from './node_modules/three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from './node_modules/three/examples/jsm/loaders/DRACOLoader.js'
-import { BLACK, WHITE } from './data.js'
+import { BLACK, WHITE, WOOD_TEXTURES } from './data.js'
 
-const MODELS = new Map()
-let selectedMesh
-let activeHandle
-let activePillow
+const ASSETS = new Map()
+
+let woodenMeshes = []
 
 window.onload = () => 
 {
     let loader = new ENGINE.AssetLoader()
+    for (let path of WOOD_TEXTURES)
+        loader.addLoader(path, path, new THREE.TextureLoader())
     for (let path in WHITE)
     {
         let dracoLoader = new DRACOLoader()
@@ -36,42 +37,94 @@ window.onload = () =>
         cameraManager.setLookAt(0, 0.25, 0)
         sceneManager.register(cameraManager)
         sceneManager.setActiveCamera('Camera')
-        sceneManager.setBackground(new THREE.Color(0.79,0.81,0.814))
+        sceneManager.setBackground(new THREE.Color(1, 1, 1))
+        sceneManager.enableSSAO(true)
+        sceneManager.setSizeInPercent(0.6, 0.8)
         let ambientLight = new ENGINE.AmbientLight('AmbientLight', new THREE.Color(1, 1, 1), 1)
         sceneManager.register(ambientLight)
         let input = new ENGINE.InputManager('Input')
-        input.registerLMBPressEvent((x, y) => {
-            let hitObject = sceneManager.raycastAndGetNearest({x: x,y: y})
-            if (hitObject != undefined)    
-                selectedMesh = hitObject.object
-        })
-        input.registerLMBMoveEvent((dx, dy, x, y) => {
-            if (selectedMesh != undefined)
-                moveHandleAndPillow(selectedMesh.name, dx)
-        })
-        input.registerLMBReleaseEvent(e => {selectedMesh = undefined})
         sceneManager.register(input)
         cameraManager.registerInput(input)
         for (let modelType in WHITE)
         {
             let model = new ENGINE.MeshModel(WHITE[modelType], assetMap.get(WHITE[modelType]), true)
-            model.enableRayCastingOnTriMesh(true)
             sceneManager.register(model)
-            MODELS.set(WHITE[modelType], model)
+            ASSETS.set(WHITE[modelType], model)
             activateModel(model, modelType, true)
+            if (modelType == 'handle')    
+                woodenMeshes.push(model.getMesh('merida-daybed-armrest-wood001'))
         }
         for (let modelType in BLACK)
         {
             let model = new ENGINE.MeshModel(BLACK[modelType], assetMap.get(BLACK[modelType]), true)
-            model.enableRayCastingOnTriMesh(true)
             sceneManager.register(model)
-            MODELS.set(BLACK[modelType], model)
+            ASSETS.set(BLACK[modelType], model)
             activateModel(model, modelType, false)
+            if (modelType == 'handle')
+                woodenMeshes.push(model.getMesh('merida-daybed-armrest-wood001'))
         }
-        populateMenu(document.getElementById('menu-wood'), [])
+        for (let path of WOOD_TEXTURES)
+        {    
+            let texture = assetMap.get(path)
+            let img = texture.source.data
+            Promise.all([createImageBitmap(img, 0, 0, img.width, img.height)]).then(sprites => texture.source.data = sprites[0])
+            ASSETS.set(path, texture)
+        }
+        setupRadioButtonAction()
+        populateWoodTextureMenu()
         populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'])
         populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])
     })
+}
+
+function setupRadioButtonAction()
+{
+    let radioLeft = document.getElementById('radio-left')
+    radioLeft.addEventListener('change', e => {
+        radioRight.checked = false
+        radioLeft.checked = true
+        moveHandleAndPillow(-1)
+    })
+
+    let radioRight = document.getElementById('radio-right')
+    radioRight.addEventListener('change', e => {
+        radioLeft.checked = false
+        radioRight.checked = true
+        moveHandleAndPillow(1)
+    })
+}
+
+function populateWoodTextureMenu()
+{
+    let menu = document.getElementById('menu-wood')
+    for (let i = 0; i < WOOD_TEXTURES.length; i++)
+    {
+        let img = document.createElement('img')
+        img.id = 'wood-texture'+i
+        img.className = 'color-item'
+        img.src = WOOD_TEXTURES[i]
+        img.addEventListener('click', e => {
+            let texture = ASSETS.get(WOOD_TEXTURES[i])
+            for (let wood of woodenMeshes)
+                wood.material.map = texture
+            let imgs = menu.childNodes
+            for (let imgItem of imgs)
+            {
+                if (imgItem.id == img.id)
+                    imgItem.style.borderColor = 'rgb(0, 163, 255)'
+                else
+                    imgItem.style.borderColor = 'rgb(0, 0, 0)'
+            }
+        })
+        menu.appendChild(img)
+        if (i == 0)
+        {    
+            img.style.borderColor = 'rgb(0, 163, 255)'
+            let texture = ASSETS.get(WOOD_TEXTURES[0])
+            for (let wood of woodenMeshes)
+                wood.material.map = texture
+        }
+    }
 }
 
 function populateMenu(colorMenu, types)
@@ -82,9 +135,9 @@ function populateMenu(colorMenu, types)
     whiteItem.addEventListener('click', e => {
         for (let type of types)
         {
-            let blackModel = MODELS.get(BLACK[type])
+            let blackModel = ASSETS.get(BLACK[type])
             activateModel(blackModel, type, false)
-            let whiteModel = MODELS.get(WHITE[type])
+            let whiteModel = ASSETS.get(WHITE[type])
             activateModel(whiteModel, type, true)
         }
         whiteItem.style.borderColor = 'rgb(0, 163, 255)'
@@ -98,9 +151,9 @@ function populateMenu(colorMenu, types)
     blackItem.addEventListener('click', e => {
         for (let type of types)
         {
-            let whiteModel = MODELS.get(WHITE[type])
+            let whiteModel = ASSETS.get(WHITE[type])
             activateModel(whiteModel, type, false)
-            let blackModel = MODELS.get(BLACK[type])
+            let blackModel = ASSETS.get(BLACK[type])
             activateModel(blackModel, type, true)
         }
         whiteItem.style.borderColor = 'rgb(0, 0, 0)'
@@ -115,46 +168,52 @@ function activateModel(model, type, activate)
     {
         if (type == 'pillow')
         {    
-            let position, rotation
-            if (activePillow != undefined)
-            {    
-                position = activePillow.getPosition()
-                rotation = activePillow.getRotation()
-            }
-            activePillow = model
-            if (position != undefined)
-                activePillow.setPosition(position.x, position.y, position.z)
-            if (rotation != undefined)
-                activePillow.setRotation(rotation.x, rotation.y, rotation.z)
+            let position = model.getPosition()
+            let rotation = model.getRotation()
+            model.setPosition(position.x, position.y, position.z)
+            model.setRotation(rotation.x, rotation.y, rotation.z)
         }
         if (type == 'handle')
         {   
-            let position
-            if (activeHandle != undefined)
-                position = activeHandle.getPosition()
-            activeHandle = model
-            if (position != undefined)
-                activeHandle.setPosition(position.x, position.y, position.z)
+            let position = model.getPosition()
+            model.setPosition(position.x, position.y, position.z)
         }
     }
     model.setVisibility(activate)
 }
 
-function moveHandleAndPillow(name, dx)
+function moveHandleAndPillow(dx)
 {
-    if (name === 'merida-daybed-body-handle001' || name === 'merida-daybed-cushion01-fabric001')
-    {
-        if (dx > 0)
-        {    
-            activeHandle.setPosition(0, 0, -0.64)
-            activePillow.setRotation(ENGINE.Maths.toRadians(-180), ENGINE.Maths.toRadians(-90), ENGINE.Maths.toRadians(-180))
-            activePillow.setPosition(-0.3, 0, 0.3)
-        }
-        else if (dx < 0)
-        {    
-            activeHandle.setPosition(0, 0, 0)
-            activePillow.setRotation(0, 0, 0)
-            activePillow.setPosition(0, 0, 0)
-        }
+    if (dx > 0)
+    {    
+        let whiteHandle = ASSETS.get(WHITE['handle'])
+        whiteHandle.setPosition(0, 0, -0.64)
+
+        let blackHandle = ASSETS.get(BLACK['handle'])
+        blackHandle.setPosition(0, 0, -0.64)
+
+        let whitePillow = ASSETS.get(WHITE['pillow'])
+        whitePillow.setRotation(ENGINE.Maths.toRadians(-180), ENGINE.Maths.toRadians(-90), ENGINE.Maths.toRadians(-180))
+        whitePillow.setPosition(-0.3, 0, 0.3)
+
+        let blackPillow = ASSETS.get(BLACK['pillow'])
+        blackPillow.setRotation(ENGINE.Maths.toRadians(-180), ENGINE.Maths.toRadians(-90), ENGINE.Maths.toRadians(-180))
+        blackPillow.setPosition(-0.3, 0, 0.3)
+    }
+    else if (dx < 0)
+    {    
+        let whiteHandle = ASSETS.get(WHITE['handle'])
+        whiteHandle.setPosition(0, 0, 0)
+
+        let whitePillow = ASSETS.get(WHITE['pillow'])
+        whitePillow.setRotation(0, 0, 0)
+        whitePillow.setPosition(0, 0, 0)
+
+        let blackHandle = ASSETS.get(BLACK['handle'])
+        blackHandle.setPosition(0, 0, 0)
+
+        let blackPillow = ASSETS.get(BLACK['pillow'])
+        blackPillow.setRotation(0, 0, 0)
+        blackPillow.setPosition(0, 0, 0)
     }
 }

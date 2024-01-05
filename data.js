@@ -13,3 +13,5 @@ export const WHITE =
     'handle' : 'assets/white/MeridaDaybed02_Handle.glb',
     'pillow' : 'assets/white/MeridaDaybed02_Pillow.glb'
 }
+
+export const WOOD_TEXTURES = ['assets/textures/wood/1.jpg', 'assets/textures/wood/3051_25.png', 'assets/textures/wood/walnut2.jpeg', 'assets/textures/wood/wood_03.jpg']
