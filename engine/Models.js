@@ -112,7 +112,8 @@ export class MeshModel extends SceneObject
                     mesh.receiveShadow = true
                     mesh.castShadow = true
                 }
-                mesh.material.transparent = true
+                else
+                    mesh.material.transparent = true
             }
         })
         const clip = model.animations[0]

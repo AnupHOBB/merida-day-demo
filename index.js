@@ -5,7 +5,6 @@ import { DRACOLoader } from './node_modules/three/examples/jsm/loaders/DRACOLoad
 import { BLACK, WHITE } from './data.js'
 
 const MODELS = new Map()
-let lastX = -1
 let selectedMesh
 let activeHandle
 let activePillow
@@ -69,9 +68,9 @@ window.onload = () =>
             MODELS.set(BLACK[modelType], model)
             activateModel(model, modelType, false)
         }
-        populateMenu(document.getElementById('menu-wood'), ['handle'])
+        populateMenu(document.getElementById('menu-wood'), [])
         populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'])
-        populateMenu(document.getElementById('menu-metal'), ['frame'])
+        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])
     })
 }
 
