@@ -301,8 +301,11 @@ class CursorEventCore
         this.firstClicks[event.button] = true
         this.lastXYs[event.button] = { x: 0, y: 0 }
         let callbacks = this.releaseCallbacks[event.button]
-        for (let releaseCallback of callbacks)
-            releaseCallback(event)
+        if (callbacks != undefined)
+        {
+            for (let releaseCallback of callbacks)
+                releaseCallback(event)
+        }
     }
 
     /**

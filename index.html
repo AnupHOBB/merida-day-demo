@@ -1,31 +1,39 @@
 <html>
     <head>
-        <link rel="stylesheet" href="index.css"/>
+        <link rel="stylesheet" href="index-portrait.css"/>
+        <link rel="stylesheet" href="index-landscape.css"/>
         <script type="module" src="index.js"></script>
     </head>
     <body>
         <canvas id="scene"></canvas>
         <div id="side-bar">
-            <div class="side-bar-item">
-                <p class="side-bar-item-title">HANDLE POSITION</p>
-                <div id="menu-handle-position" class="color-menu">
-                    <label for="radio-left" class="radio-text">Left</label>
-                    <input id="radio-left" type="radio" checked/>
-                    <input id="radio-right" type="radio"/>
-                    <label for="radio-right" class="radio-text">Right</label>
+            <div id="side-bar-container">
+                <div class="side-bar-item">
+                    <p class="side-bar-item-title">HANDLE POSITION</p>
+                    <div id="menu-handle-position" class="radio-container">
+                        <div class="radio-item-container">
+                            <label for="radio-left" class="radio-text">Left</label>
+                            <input id="radio-left" type="radio" class="radio-button" checked/>
+                        </div>
+                        <br/>
+                        <div class="radio-item-container">
+                            <label for="radio-right" class="radio-text">Right</label>
+                            <input id="radio-right" type="radio" class="radio-button"/>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="side-bar-item">
-                <p class="side-bar-item-title">WOOD</p>
-                <div id="menu-wood" class="color-menu"></div>
-            </div>
-            <div class="side-bar-item">
-                <p class="side-bar-item-title">FABRIC</p>
-                <div id="menu-fabric" class="color-menu"></div>
-            </div>
-            <div class="side-bar-item">
-                <p class="side-bar-item-title">METAL</p>
-                <div id="menu-metal" class="color-menu"></div>
+                <div class="side-bar-item">
+                    <p class="side-bar-item-title">WOOD</p>
+                    <div id="menu-wood" class="color-menu"></div>
+                </div>
+                <div class="side-bar-item">
+                    <p class="side-bar-item-title">FABRIC</p>
+                    <div id="menu-fabric" class="color-menu"></div>
+                </div>
+                <div class="side-bar-item">
+                    <p class="side-bar-item-title">METAL</p>
+                    <div id="menu-metal" class="color-menu"></div>
+                </div>
             </div>
         </div>
     </body>

@@ -9,6 +9,7 @@ const ASSETS = new Map()
 let rootModel
 let xrot = 0
 let woodenMeshes = []
+let sceneManager
 
 window.onload = () => 
 {
@@ -33,7 +34,7 @@ window.onload = () =>
     }
     loader.execute(p=>{}, assetMap => {
         let canvas = document.querySelector('canvas')
-        let sceneManager = new ENGINE.SceneManager(canvas, true)
+        sceneManager = new ENGINE.SceneManager(canvas, true)
         let cameraManager = new ENGINE.StaticCameraManager('Camera', 45)
         cameraManager.setPosition(2, 1, 2)
         cameraManager.setLookAt(0, 0.25, 0)
@@ -41,11 +42,12 @@ window.onload = () =>
         sceneManager.setActiveCamera('Camera')
         sceneManager.setBackground(new THREE.Color(1, 1, 1))
         sceneManager.enableSSAO(true)
-        sceneManager.setSizeInPercent(0.6, 0.8)
+        resizeCanvas()
         let ambientLight = new ENGINE.AmbientLight('AmbientLight', new THREE.Color(1, 1, 1), 1)
         sceneManager.register(ambientLight)
         let input = new ENGINE.InputManager('Input')
         input.registerLMBMoveEvent(rotateModel)
+        input.registerTouchMoveEvent(rotateModel)
         sceneManager.register(input)
         cameraManager.registerInput(input)
         
@@ -83,6 +85,24 @@ window.onload = () =>
         populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'])
         populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])      
     })
+}
+
+window.onresize = () => resizeCanvas()
+
+function resizeCanvas()
+{
+    if (sceneManager != undefined)
+    {
+        if (window.innerWidth/window.innerHeight <= 1)
+        {    
+            let sideBar = document.getElementById('side-bar')
+            let sideBarRects = sideBar.getClientRects()
+            let canvasHeight = window.innerHeight - sideBarRects[0].height
+            sceneManager.setSizeInPercent(1, canvasHeight/window.innerHeight)
+        }
+        else
+            sceneManager.setSizeInPercent(0.6, 0.8)
+    }
 }
 
 function assembleBed(modelData)
