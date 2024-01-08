@@ -6,6 +6,8 @@ import { BLACK, WHITE, WOOD_TEXTURES } from './data.js'
 
 const ASSETS = new Map()
 
+let rootModel
+let xrot = 0
 let woodenMeshes = []
 
 window.onload = () => 
@@ -43,23 +45,26 @@ window.onload = () =>
         let ambientLight = new ENGINE.AmbientLight('AmbientLight', new THREE.Color(1, 1, 1), 1)
         sceneManager.register(ambientLight)
         let input = new ENGINE.InputManager('Input')
+        input.registerLMBMoveEvent(rotateModel)
         sceneManager.register(input)
         cameraManager.registerInput(input)
+        
+        rootModel = new ENGINE.SceneObject('Root')
         for (let modelType in WHITE)
         {
             let model = new ENGINE.MeshModel(WHITE[modelType], assetMap.get(WHITE[modelType]), true)
-            sceneManager.register(model)
             ASSETS.set(WHITE[modelType], model)
             activateModel(model, modelType, true)
+            rootModel.attachModel(model)
             if (modelType == 'handle')    
                 woodenMeshes.push(model.getMesh('merida-daybed-armrest-wood001'))
         }
         for (let modelType in BLACK)
         {
             let model = new ENGINE.MeshModel(BLACK[modelType], assetMap.get(BLACK[modelType]), true)
-            sceneManager.register(model)
             ASSETS.set(BLACK[modelType], model)
             activateModel(model, modelType, false)
+            rootModel.attachModel(model)
             if (modelType == 'handle')
                 woodenMeshes.push(model.getMesh('merida-daybed-armrest-wood001'))
         }
@@ -70,11 +75,29 @@ window.onload = () =>
             Promise.all([createImageBitmap(img, 0, 0, img.width, img.height)]).then(sprites => texture.source.data = sprites[0])
             ASSETS.set(path, texture)
         }
+        sceneManager.register(rootModel)
+        assembleBed(WHITE)
+        assembleBed(BLACK)
         setupRadioButtonAction()
         populateWoodTextureMenu()
         populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'])
-        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])
+        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])      
     })
+}
+
+function assembleBed(modelData)
+{
+    if (rootModel != undefined)
+    {
+        let bed = ASSETS.get(modelData['bed'])
+        let frame = ASSETS.get(modelData['frame'])
+        let handle = ASSETS.get(modelData['handle'])
+        let pillow = ASSETS.get(modelData['pillow'])
+        rootModel.attachModel(bed)
+        rootModel.attachModel(frame)
+        rootModel.attachModel(handle)
+        rootModel.attachModel(pillow)
+    }
 }
 
 function setupRadioButtonAction()
@@ -215,5 +238,16 @@ function moveHandleAndPillow(dx)
         let blackPillow = ASSETS.get(BLACK['pillow'])
         blackPillow.setRotation(0, 0, 0)
         blackPillow.setPosition(0, 0, 0)
+    }
+}
+
+function rotateModel(dx, dy)
+{
+    if (rootModel != undefined)
+    {
+        let rot = xrot
+        rot += dx * 0.5
+        xrot = rot
+        rootModel.setRotation(0, ENGINE.Maths.toRadians(xrot), 0)
     }
 }

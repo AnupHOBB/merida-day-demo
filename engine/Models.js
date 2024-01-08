@@ -134,7 +134,7 @@ export class MeshModel extends SceneObject
      * @param {Boolean} isRayCastable boolean value indicating whether the mesh should participate in ray casting
      */
     addDrawable(drawableObject, isRayCastable) { this.drawables.push({object: drawableObject, isRayCastable: isRayCastable}) }
-
+    
     /**
      * Renders new animation frame
      * @param {Number} deltaSeconds the time difference of the target animation frame from the current animation frame  
@@ -155,18 +155,28 @@ export class MeshModel extends SceneObject
 
     /**
      * Sets the rotation of the mesh in world space using euler values
-     * @param {Number} x x-coordinate in world space
-     * @param {Number} y y-coordinate in world space
-     * @param {Number} z z-coordinate in world space 
+     * @param {Number} x pitch in world space
+     * @param {Number} y yaw in world space
+     * @param {Number} z roll in world space 
      */
     setRotation(x, y, z) { this.scene.rotation.set(x, y, z) }
-
+    
     /**
      * Sets the rotation of the mesh in world space using axis and angle
      * @param {Vector3} axis axis of rotation
      * @param {Number} angle angle of rotation in radians
      */
     setRotationFromAxisAngle(axis, angle) { this.scene.setRotationFromAxisAngle(axis, angle) }
+
+    /**
+     * Attaches another model boject to this one
+     * @param {MeshModel} model 
+     */
+    attachModel(model)
+    {
+        model.scene.parent = this.scene
+        this.scene.children.push(model.scene)
+    }
 
     setRotationFromAxisAngleFor(axis, angleInRadians, names)
     {
