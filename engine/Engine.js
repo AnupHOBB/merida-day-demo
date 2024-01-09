@@ -1,6 +1,7 @@
 export { Misc } from './helpers/misc.js'
 export { Matrix } from './helpers/matrix.js'
 export { Maths } from './helpers/maths.js'
+export { ModelHelpers } from './helpers/modelHelpers.js'
 export { AssetLoader } from './AssetLoader.js'
 export { CameraManager } from './cameras/CameraManager.js'
 export { OrbitalCameraManager } from './cameras/OrbitalCameraManager.js'

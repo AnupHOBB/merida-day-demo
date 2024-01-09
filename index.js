@@ -10,6 +10,7 @@ let rootModel
 let xrot = 0
 let woodenMeshes = []
 let sceneManager
+let selectedParts = new Map()
 
 window.onload = () => 
 {
@@ -32,7 +33,8 @@ window.onload = () =>
         gltfLoader.setDRACOLoader(dracoLoader)
         loader.addLoader(BLACK[path], BLACK[path], gltfLoader)
     }
-    loader.execute(p=>{}, assetMap => {
+    loader.execute(p=>{}, assetMap => 
+    {
         let canvas = document.querySelector('canvas')
         sceneManager = new ENGINE.SceneManager(canvas, true)
         let cameraManager = new ENGINE.StaticCameraManager('Camera', 45)
@@ -42,7 +44,7 @@ window.onload = () =>
         sceneManager.setActiveCamera('Camera')
         sceneManager.setBackground(new THREE.Color(1, 1, 1))
         sceneManager.enableSSAO(true)
-        resizeCanvas()
+        sceneManager.enableFXAA(true)
         let ambientLight = new ENGINE.AmbientLight('AmbientLight', new THREE.Color(1, 1, 1), 1)
         sceneManager.register(ambientLight)
         let input = new ENGINE.InputManager('Input')
@@ -50,7 +52,6 @@ window.onload = () =>
         input.registerTouchMoveEvent(rotateModel)
         sceneManager.register(input)
         cameraManager.registerInput(input)
-        
         rootModel = new ENGINE.SceneObject('Root')
         for (let modelType in WHITE)
         {
@@ -83,7 +84,9 @@ window.onload = () =>
         setupRadioButtonAction()
         populateWoodTextureMenu()
         populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'])
-        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])      
+        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])
+        setupAR()
+        resizeCanvas()
     })
 }
 
@@ -98,10 +101,19 @@ function resizeCanvas()
             let sideBar = document.getElementById('side-bar')
             let sideBarRects = sideBar.getClientRects()
             let canvasHeight = window.innerHeight - sideBarRects[0].height
-            sceneManager.setSizeInPercent(1, canvasHeight/window.innerHeight)
+            let percentHeight = canvasHeight/window.innerHeight
+            sceneManager.setSizeInPercent(1, percentHeight)
+            let canvasContainer = document.getElementById('canvas-container')
+            canvasContainer.style.width = '100%'
+            canvasContainer.style.height = ''+(percentHeight * 100)+'%'
         }
         else
+        {    
             sceneManager.setSizeInPercent(0.6, 0.8)
+            let canvasContainer = document.getElementById('canvas-container')
+            canvasContainer.style.width = '60%'
+            canvasContainer.style.height = '80%'
+        }
     }
 }
 
@@ -222,6 +234,8 @@ function activateModel(model, type, activate)
             model.setPosition(position.x, position.y, position.z)
         }
     }
+    if (activate)
+        selectedParts.set(type, model)
     model.setVisibility(activate)
 }
 
@@ -237,11 +251,11 @@ function moveHandleAndPillow(dx)
 
         let whitePillow = ASSETS.get(WHITE['pillow'])
         whitePillow.setRotation(ENGINE.Maths.toRadians(-180), ENGINE.Maths.toRadians(-90), ENGINE.Maths.toRadians(-180))
-        whitePillow.setPosition(-0.3, 0, 0.3)
+        whitePillow.setPosition(-0.3, 0, 0.225)
 
         let blackPillow = ASSETS.get(BLACK['pillow'])
         blackPillow.setRotation(ENGINE.Maths.toRadians(-180), ENGINE.Maths.toRadians(-90), ENGINE.Maths.toRadians(-180))
-        blackPillow.setPosition(-0.3, 0, 0.3)
+        blackPillow.setPosition(-0.3, 0, 0.225)
     }
     else if (dx < 0)
     {    
@@ -270,4 +284,31 @@ function rotateModel(dx, dy)
         xrot = rot
         rootModel.setRotation(0, ENGINE.Maths.toRadians(xrot), 0)
     }
+}
+
+function setupAR()
+{
+    let arButton = document.getElementById('ar-container')
+    arButton.addEventListener('click', e => openInAR())
+}
+
+function openInAR()
+{
+    let bed = selectedParts.get('bed')
+    let frame = selectedParts.get('frame')
+    let handle = selectedParts.get('handle')
+    let pillow = selectedParts.get('pillow')
+
+    let arModel = new ENGINE.SceneObject('AR')
+    arModel.attachModel(bed)
+    arModel.attachModel(frame)
+    arModel.attachModel(handle)
+    arModel.attachModel(pillow)
+
+    let model = arModel.scene.clone()
+    ENGINE.ModelHelpers.generateUrlForModel(model, url => {
+        let modelViewer = document.querySelector('model-viewer')
+        modelViewer.src = url
+        modelViewer.activateAR()
+    })
 }

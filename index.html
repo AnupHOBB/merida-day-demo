@@ -1,11 +1,21 @@
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <link rel="stylesheet" href="index-portrait.css"/>
         <link rel="stylesheet" href="index-landscape.css"/>
+        <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
         <script type="module" src="index.js"></script>
     </head>
     <body>
-        <canvas id="scene"></canvas>
+        <div id="canvas-container">
+            <canvas id="scene"></canvas>
+            <div id="ar-container">
+                <div id="ar-button">
+                    <img id="ar-icon" src="assets/ar.png"/>
+                    <p id="ar-text">View in AR</p>
+                </div>
+            </div>
+        </div>
         <div id="side-bar">
             <div id="side-bar-container">
                 <div class="side-bar-item">
@@ -36,5 +46,16 @@
                 </div>
             </div>
         </div>
+        <model-viewer
+            disable-tap
+            camera-controls
+            touch-action="pan-y"
+            ar 
+            ar-scale="fixed"
+            shadow-intensity="1" 
+            shadow-softness="1"
+            style="width: 0%; height: 0%;">
+            <button slot="ar-button" id="ar-button"></button>
+        </model-viewer>
     </body>
 </html>

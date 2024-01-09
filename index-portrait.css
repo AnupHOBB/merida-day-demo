@@ -6,11 +6,41 @@
         background-color: #F8FBFB;
     }
     
-    canvas#scene
+    div#canvas-container
     {
         position: absolute;
         top: 0%;
         left: 0%;
+    }
+
+    div#ar-container
+    {
+        position: absolute;
+        top: 1%;
+        right: 1%;
+    }
+
+    div#ar-button
+    {
+        display: flex;
+        gap: 1vh;
+        padding-left: 1vh;
+        padding-right: 1vh;
+        background-color: #E3E7E9;
+        border-radius: 1vh;
+    }
+
+    img#ar-icon
+    {
+        margin-top: 1vh;
+        width: 3vh;
+        height: 3vh;
+    }
+
+    p#ar-text
+    {
+        font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-size: 1.5vh;
     }
     
     div#side-bar
@@ -53,19 +83,6 @@
         }
     }
 
-    @media screen and (max-width : 600px)
-    {
-        p.side-bar-item-title
-        {
-            width: 100%;
-            height: 1%;
-            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-            font-size: 2vw;
-            padding-left: 1vw;
-            font-weight: bold;
-        }
-    }
-    
     @media screen and (min-width : 600px)
     {
         p.side-bar-item-title
