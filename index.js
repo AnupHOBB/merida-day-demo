@@ -1,11 +1,15 @@
-import * as THREE from './node_modules/three/src/Three.js'
-import * as ENGINE from './engine/Engine.js'
-import { GLTFLoader } from './node_modules/three/examples/jsm/loaders/GLTFLoader.js'
-import { DRACOLoader } from './node_modules/three/examples/jsm/loaders/DRACOLoader.js'
+import { ImportManager } from './engine/ImportManager.js'
 import { BLACK, WHITE, WOOD_TEXTURES, WOOD_ICONS } from './data.js'
+
+let importMap = new Map()
+importMap.set('THREE', '../node_modules/three/src/Three.js')
+importMap.set('GLTF','../node_modules/three/examples/jsm/loaders/GLTFLoader.js')
+importMap.set('DRACO','../node_modules/three/examples/jsm/loaders/DRACOLoader.js')
+importMap.set('ENGINE','./Engine.js')
 
 const ASSETS = new Map()
 
+let ENGINE
 let isReady
 let rootModel
 let yaw = 0
@@ -17,29 +21,50 @@ let selectedWoodTextureIndex = 0
 
 window.onload = () => 
 {
+    let loadingText = document.getElementById('loading-text')
+    ImportManager.execute(importMap, (name, module, progress) => 
+    {
+        let status = Math.round((progress * 10)/100)
+        loadingText.innerHTML = 'LOADING '+status+'%'
+        importMap.set(name, module)
+    }, () => load())
+}
+
+function load()
+{
+    let THREE = importMap.get('THREE')
+    ENGINE = importMap.get('ENGINE')
     let loader = new ENGINE.AssetLoader()
     for (let path of WOOD_TEXTURES)
         loader.addLoader(path, path, new THREE.TextureLoader())
     for (let path of WOOD_ICONS)    
         loader.addLoader(path, path, new THREE.TextureLoader())
+
+    let GLTF = importMap.get('GLTF')
+    let DRACO = importMap.get('DRACO')
     for (let path in WHITE)
     {
-        let dracoLoader = new DRACOLoader()
+        let dracoLoader = new DRACO.DRACOLoader()
         dracoLoader.setDecoderPath(ENGINE.DRACO_DECODER_PATH)
-        let gltfLoader = new GLTFLoader()
+        let gltfLoader = new GLTF.GLTFLoader()
         gltfLoader.setDRACOLoader(dracoLoader)
         loader.addLoader(WHITE[path], WHITE[path], gltfLoader)
     }
     for (let path in BLACK)
     {
-        let dracoLoader = new DRACOLoader()
+        let dracoLoader = new DRACO.DRACOLoader()
         dracoLoader.setDecoderPath(ENGINE.DRACO_DECODER_PATH)
-        let gltfLoader = new GLTFLoader()
+        let gltfLoader = new GLTF.GLTFLoader()
         gltfLoader.setDRACOLoader(dracoLoader)
         loader.addLoader(BLACK[path], BLACK[path], gltfLoader)
     }
     let loadingText = document.getElementById('loading-text')
-    loader.execute(p=> { loadingText.innerText = 'LOADING '+((p <= 100)?p:100)+'%' }, assetMap => 
+    loader.execute(p=> 
+    {
+        let status = Math.round((p * 90)/100)
+        status += 10 
+        loadingText.innerText = 'LOADING '+((p <= 100)?p:100)+'%' 
+    }, assetMap => 
     {
         let canvas = document.querySelector('canvas')
         sceneManager = new ENGINE.SceneManager(canvas, true)
