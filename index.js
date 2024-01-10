@@ -63,7 +63,7 @@ function load()
     {
         let status = Math.round((p * 90)/100)
         status += 10 
-        loadingText.innerText = 'LOADING '+((p <= 100)?p:100)+'%' 
+        loadingText.innerText = 'LOADING '+((status <= 100)?status:100)+'%' 
     }, assetMap => 
     {
         let canvas = document.querySelector('canvas')
