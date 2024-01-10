@@ -39,7 +39,7 @@ window.onload = () =>
         loader.addLoader(BLACK[path], BLACK[path], gltfLoader)
     }
     let loadingText = document.getElementById('loading-text')
-    loader.execute(p=> { loadingText.innerText = 'LOADING '+p+'%' }, assetMap => 
+    loader.execute(p=> { loadingText.innerText = 'LOADING '+((p <= 100)?p:100)+'%' }, assetMap => 
     {
         let canvas = document.querySelector('canvas')
         sceneManager = new ENGINE.SceneManager(canvas, true)
