@@ -10,7 +10,8 @@ importMap.set('ENGINE','./Engine.js')
 const ASSETS = new Map()
 
 let ENGINE
-let isReady
+let isReadyForAr
+let isLoading = true
 let rootModel
 let yaw = 0
 let pitch = 0
@@ -18,14 +19,17 @@ let woodenMeshes = []
 let sceneManager
 let selectedParts = new Map()
 let selectedWoodTextureIndex = 0
+let progress = 0
+let progressDots = 1
+let loadingText
 
 window.onload = () => 
 {
-    let loadingText = document.getElementById('loading-text')
+    loadingText = document.getElementById('loading-text')
     ImportManager.execute(importMap, (name, module, progress) => 
     {
-        let status = Math.round((progress * 10)/100)
-        loadingText.innerHTML = 'LOADING '+status+'%'
+        progress = Math.round((progress * 10)/100)
+        updateProgress()
         importMap.set(name, module)
     }, () => load())
 }
@@ -58,12 +62,11 @@ function load()
         gltfLoader.setDRACOLoader(dracoLoader)
         loader.addLoader(BLACK[path], BLACK[path], gltfLoader)
     }
-    let loadingText = document.getElementById('loading-text')
     loader.execute(p=> 
     {
         let status = Math.round((p * 90)/100)
         status += 10 
-        loadingText.innerText = 'LOADING '+((status <= 100)?status:100)+'%' 
+        progress = (status <= 100)? status : 100
     }, assetMap => 
     {
         let canvas = document.querySelector('canvas')
@@ -124,6 +127,7 @@ function load()
         setupAR()
         resizeCanvas()
         initializeRoot()
+        isLoading = false
         let loadingScreen = document.getElementById('loading-screen')
         document.body.removeChild(loadingScreen)
     })
@@ -350,7 +354,7 @@ function setupAR()
         let arMessage = document.getElementById('ar-message')
         let message = 'Exporting model'
         arMessage.innerText = message
-        isReady = false
+        isReadyForAr = false
         updateARStatus(message, 0)
         setTimeout(openInAR, 500)
     })
@@ -366,7 +370,7 @@ function updateARStatus(message, dots)
     dots++
     if (dots > 2)
         dots = 0
-    if (!isReady)
+    if (!isReadyForAr)
         setTimeout(e => updateARStatus(message, dots), 100)
     else
         arMessage.innerText = ''
@@ -383,7 +387,7 @@ function openInAR()
         wood.material.map = texture
 
     ENGINE.ModelHelpers.generateUrlForModel(model, url => {
-        isReady = true
+        isReadyForAr = true
         let modelViewer = document.querySelector('model-viewer')
         modelViewer.src = url
         modelViewer.activateAR()
@@ -392,4 +396,26 @@ function openInAR()
         for (let wood of woodenMeshes)
             wood.material.map = texture
     })
+}
+
+function updateProgress()
+{
+    let message = 'LOADING'
+    for (let i=0; i<progressDots; i++)
+        message += '.'
+    let spaces = 3 - progressDots
+    for (let i=0; i<spaces; i++)
+        message += '&nbsp'
+    progressDots++
+    if (progressDots > 3)
+        progressDots = 1
+    if (progress < 10)
+        message += '&nbsp&nbsp&nbsp&nbsp&nbsp'+progress+'%'
+    else if (progress >= 9 && progress < 100)
+        message += '&nbsp&nbsp&nbsp'+progress+'%'
+    else
+        message += '&nbsp'+progress+'%'
+    loadingText.innerHTML = message
+    if (isLoading)
+        setTimeout(updateProgress, 100)
 }
