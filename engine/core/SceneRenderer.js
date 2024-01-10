@@ -96,6 +96,7 @@ export class SceneRenderer
     {
         this.width = width
         this.height = height
+        this.renderer.setPixelRatio(this.width/this.height)
     }
 
     /**

@@ -9,11 +9,13 @@ export class SceneObject
 {
     /**
      * @param {String} name name of the object which is used in sending or receiving message
+     * @param {THREE.Object3D} scene threejs object3D instance
      */
-    constructor(name) 
+    constructor(name, scene) 
     { 
-        this.name = name 
-        this.scene = new THREE.Group()
+        this.name = name
+        this.scene = (scene != undefined && scene.isObject3D != undefined && scene.isObject3D) ? scene : new THREE.Group()
+        this.children = []
     }
 
     /**
@@ -40,14 +42,51 @@ export class SceneObject
     setRotationFromAxisAngle(axis, angle) { this.scene.setRotationFromAxisAngle(axis, angle) }
 
     /**
-     * Attaches another model boject to this one
-     * @param {MeshModel} model 
+     * Sets the rotation order for the model. Values should be one of the following in string :-
+     * XYZ, ZXY, YZX, XZY, YXZ, ZYX
+     * @param {String} order the rotation order in string
      */
-    attachModel(model)
+    setRotationOrder(order) { this.scene.rotation.order = order }
+
+    /**
+     * Attaches another scene object oject to this one
+     * @param {SceneObject} model 
+     */
+    attach(model)
     {
-        model.scene.parent = this.scene
-        this.scene.children.push(model.scene)
+        if (model != undefined)
+        {
+            model.scene.parent = this.scene
+            this.scene.children.push(model.scene)
+            this.children.push(model)
+        }
     }
+
+    /**
+     * Detaches model oject from this one
+     * @param {SceneObject} model 
+     */
+    detach(model)
+    {
+        if (model != undefined)
+        {
+            let i = this.scene.children.indexOf(model.scene)
+            if (i > -1)    
+            {    
+                this.scene.children.splice(i, 1)
+                model.scene.parent = null
+                let j = this.children.push(model)
+                if (j > -1)
+                    this.children.splice(j, 1)
+            }
+        }
+    }
+
+    /**
+     * Returns an array of attached models
+     * @returns {Array} array of attached children models
+     */
+    getAttachedModels() { return this.children }
 
     /**
      * Called by SceneManager when there is a message for this object posted by any other object registered in SceneManager.
@@ -573,7 +612,7 @@ export class SceneManager
         let drawables = sceneObject.getDrawables()
         let lights = sceneObject.getLights()
         for (let drawable of drawables)
-        {    
+        {
             this.sceneRenderer.remove(drawable.object)
             if (drawable.isRayCastable)
                 this.raycast.remove(sceneObject.name)

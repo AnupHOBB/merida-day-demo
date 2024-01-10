@@ -2,20 +2,25 @@ import * as THREE from './node_modules/three/src/Three.js'
 import * as ENGINE from './engine/Engine.js'
 import { GLTFLoader } from './node_modules/three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from './node_modules/three/examples/jsm/loaders/DRACOLoader.js'
-import { BLACK, WHITE, WOOD_TEXTURES } from './data.js'
+import { BLACK, WHITE, WOOD_TEXTURES, WOOD_ICONS } from './data.js'
 
 const ASSETS = new Map()
 
+let isReady
 let rootModel
-let xrot = 0
+let yaw = 0
+let pitch = 0
 let woodenMeshes = []
 let sceneManager
 let selectedParts = new Map()
+let selectedWoodTextureIndex = 0
 
 window.onload = () => 
 {
     let loader = new ENGINE.AssetLoader()
     for (let path of WOOD_TEXTURES)
+        loader.addLoader(path, path, new THREE.TextureLoader())
+    for (let path of WOOD_ICONS)    
         loader.addLoader(path, path, new THREE.TextureLoader())
     for (let path in WHITE)
     {
@@ -33,7 +38,8 @@ window.onload = () =>
         gltfLoader.setDRACOLoader(dracoLoader)
         loader.addLoader(BLACK[path], BLACK[path], gltfLoader)
     }
-    loader.execute(p=>{}, assetMap => 
+    let loadingText = document.getElementById('loading-text')
+    loader.execute(p=> { loadingText.innerText = 'LOADING '+p+'%' }, assetMap => 
     {
         let canvas = document.querySelector('canvas')
         sceneManager = new ENGINE.SceneManager(canvas, true)
@@ -53,12 +59,13 @@ window.onload = () =>
         sceneManager.register(input)
         cameraManager.registerInput(input)
         rootModel = new ENGINE.SceneObject('Root')
+        rootModel.setRotationOrder('YXZ')
         for (let modelType in WHITE)
         {
             let model = new ENGINE.MeshModel(WHITE[modelType], assetMap.get(WHITE[modelType]), true)
             ASSETS.set(WHITE[modelType], model)
-            activateModel(model, modelType, true)
-            rootModel.attachModel(model)
+            rootModel.attach(model)
+            selectedParts.set(modelType, model)
             if (modelType == 'handle')    
                 woodenMeshes.push(model.getMesh('merida-daybed-armrest-wood001'))
         }
@@ -66,8 +73,7 @@ window.onload = () =>
         {
             let model = new ENGINE.MeshModel(BLACK[modelType], assetMap.get(BLACK[modelType]), true)
             ASSETS.set(BLACK[modelType], model)
-            activateModel(model, modelType, false)
-            rootModel.attachModel(model)
+            rootModel.attach(model)
             if (modelType == 'handle')
                 woodenMeshes.push(model.getMesh('merida-daybed-armrest-wood001'))
         }
@@ -78,19 +84,55 @@ window.onload = () =>
             Promise.all([createImageBitmap(img, 0, 0, img.width, img.height)]).then(sprites => texture.source.data = sprites[0])
             ASSETS.set(path, texture)
         }
+        for (let path of WOOD_ICONS)
+        {    
+            let texture = assetMap.get(path)
+            let img = texture.source.data
+            Promise.all([createImageBitmap(img, 0, 0, img.width, img.height)]).then(sprites => texture.source.data = sprites[0])
+            ASSETS.set(path, texture)
+        }
         sceneManager.register(rootModel)
-        assembleBed(WHITE)
-        assembleBed(BLACK)
         setupRadioButtonAction()
         populateWoodTextureMenu()
         populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'])
         populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])
         setupAR()
         resizeCanvas()
+        initializeRoot()
+        let loadingScreen = document.getElementById('loading-screen')
+        document.body.removeChild(loadingScreen)
     })
 }
 
 window.onresize = () => resizeCanvas()
+
+function initializeRoot()
+{
+    let attachedModels = rootModel.getAttachedModels()
+    let children = []
+    for (let model of attachedModels)
+        children.push(model)
+    let keys = selectedParts.keys()
+    let selectedNames = []
+    for (let key of keys)
+        selectedNames.push(key)
+    let isSelected
+    for (let child of children)
+    {
+        isSelected = false
+        for (let selectedName of selectedNames)
+        {
+            let selectedModel = selectedParts.get(selectedName)
+            if (selectedModel.name === child.name)
+            {
+                isSelected = true
+                break
+            }
+        }
+        if (!isSelected)
+            rootModel.detach(child)
+    }
+}
 
 function resizeCanvas()
 {
@@ -114,21 +156,6 @@ function resizeCanvas()
             canvasContainer.style.width = '60%'
             canvasContainer.style.height = '80%'
         }
-    }
-}
-
-function assembleBed(modelData)
-{
-    if (rootModel != undefined)
-    {
-        let bed = ASSETS.get(modelData['bed'])
-        let frame = ASSETS.get(modelData['frame'])
-        let handle = ASSETS.get(modelData['handle'])
-        let pillow = ASSETS.get(modelData['pillow'])
-        rootModel.attachModel(bed)
-        rootModel.attachModel(frame)
-        rootModel.attachModel(handle)
-        rootModel.attachModel(pillow)
     }
 }
 
@@ -157,7 +184,7 @@ function populateWoodTextureMenu()
         let img = document.createElement('img')
         img.id = 'wood-texture'+i
         img.className = 'color-item'
-        img.src = WOOD_TEXTURES[i]
+        img.src = WOOD_ICONS[i]
         img.addEventListener('click', e => {
             let texture = ASSETS.get(WOOD_TEXTURES[i])
             for (let wood of woodenMeshes)
@@ -170,6 +197,7 @@ function populateWoodTextureMenu()
                 else
                     imgItem.style.borderColor = 'rgb(0, 0, 0)'
             }
+            selectedWoodTextureIndex = i
         })
         menu.appendChild(img)
         if (i == 0)
@@ -178,6 +206,7 @@ function populateWoodTextureMenu()
             let texture = ASSETS.get(WOOD_TEXTURES[0])
             for (let wood of woodenMeshes)
                 wood.material.map = texture
+            selectedWoodTextureIndex = 0
         }
     }
 }
@@ -235,8 +264,12 @@ function activateModel(model, type, activate)
         }
     }
     if (activate)
+    {    
+        let oldModel = selectedParts.get(type)
+        rootModel.detach(oldModel)
+        rootModel.attach(model)
         selectedParts.set(type, model)
-    model.setVisibility(activate)
+    }
 }
 
 function moveHandleAndPillow(dx)
@@ -279,36 +312,59 @@ function rotateModel(dx, dy)
 {
     if (rootModel != undefined)
     {
-        let rot = xrot
-        rot += dx * 0.5
-        xrot = rot
-        rootModel.setRotation(0, ENGINE.Maths.toRadians(xrot), 0)
+        yaw += dx * 0.5
+        pitch -= dy * 0.5
+        rootModel.setRotation(0, ENGINE.Maths.toRadians(yaw), ENGINE.Maths.toRadians(pitch))
     }
 }
 
 function setupAR()
 {
     let arButton = document.getElementById('ar-container')
-    arButton.addEventListener('click', e => openInAR())
+    arButton.addEventListener('click', async (e) => {
+        let arMessage = document.getElementById('ar-message')
+        let message = 'Exporting model'
+        arMessage.innerText = message
+        isReady = false
+        updateARStatus(message, 0)
+        setTimeout(openInAR, 500)
+    })
+}
+
+function updateARStatus(message, dots)
+{
+    let arMessage = document.getElementById('ar-message')
+    let displayMessage = message
+    for(let i=0; i<dots; i++)
+        displayMessage += '.'
+    arMessage.innerText = displayMessage
+    dots++
+    if (dots > 2)
+        dots = 0
+    if (!isReady)
+        setTimeout(e => updateARStatus(message, dots), 100)
+    else
+        arMessage.innerText = ''
 }
 
 function openInAR()
 {
-    let bed = selectedParts.get('bed')
-    let frame = selectedParts.get('frame')
-    let handle = selectedParts.get('handle')
-    let pillow = selectedParts.get('pillow')
+    rootModel.setRotation(0, 0, 0)
+    yaw = 0
+    let model = rootModel.scene.clone()
 
-    let arModel = new ENGINE.SceneObject('AR')
-    arModel.attachModel(bed)
-    arModel.attachModel(frame)
-    arModel.attachModel(handle)
-    arModel.attachModel(pillow)
+    let texture = ASSETS.get(WOOD_ICONS[selectedWoodTextureIndex])
+    for (let wood of woodenMeshes)
+        wood.material.map = texture
 
-    let model = arModel.scene.clone()
     ENGINE.ModelHelpers.generateUrlForModel(model, url => {
+        isReady = true
         let modelViewer = document.querySelector('model-viewer')
         modelViewer.src = url
         modelViewer.activateAR()
+
+        let texture = ASSETS.get(WOOD_TEXTURES[selectedWoodTextureIndex])
+        for (let wood of woodenMeshes)
+            wood.material.map = texture
     })
 }

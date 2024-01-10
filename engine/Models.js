@@ -97,8 +97,7 @@ export class MeshModel extends SceneObject
      */
     constructor(name, model, cullBackFace)
     {
-        super(name)
-        this.scene = model.scene.clone()
+        super(name, model.scene.clone())
         this.meshMap = new Map()
         Misc.postOrderTraversal(this.scene, mesh => {
             this.meshMap.set(mesh.name, mesh)
@@ -145,39 +144,6 @@ export class MeshModel extends SceneObject
             this.mixer.update(deltaSeconds)
     } 
 
-    /**
-     * Sets the position of the mesh in world space
-     * @param {Number} x x-coordinate in world space
-     * @param {Number} y y-coordinate in world space
-     * @param {Number} z z-coordinate in world space 
-     */
-    setPosition(x, y, z) { this.scene.position.set(x, y, z) }
-
-    /**
-     * Sets the rotation of the mesh in world space using euler values
-     * @param {Number} x pitch in world space
-     * @param {Number} y yaw in world space
-     * @param {Number} z roll in world space 
-     */
-    setRotation(x, y, z) { this.scene.rotation.set(x, y, z) }
-    
-    /**
-     * Sets the rotation of the mesh in world space using axis and angle
-     * @param {Vector3} axis axis of rotation
-     * @param {Number} angle angle of rotation in radians
-     */
-    setRotationFromAxisAngle(axis, angle) { this.scene.setRotationFromAxisAngle(axis, angle) }
-
-    /**
-     * Attaches another model boject to this one
-     * @param {MeshModel} model 
-     */
-    attachModel(model)
-    {
-        model.scene.parent = this.scene
-        this.scene.children.push(model.scene)
-    }
-
     setRotationFromAxisAngleFor(axis, angleInRadians, names)
     {
         Misc.postOrderTraversal(this.scene, mesh => {
@@ -194,13 +160,6 @@ export class MeshModel extends SceneObject
             }
         }) 
     }
-
-    /**
-     * Sets the rotation order for the model. Values should be one of the following in string :-
-     * XYZ, ZXY, YZX, XZY, YXZ, ZYX
-     * @param {String} order the rotation order in string
-     */
-    setRotationOrder(order) { this.scene.rotation.order = order }
 
     /**
      * Adds delta rotation into existing rotation values of the mesh in world space
