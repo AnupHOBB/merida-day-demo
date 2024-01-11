@@ -22,14 +22,16 @@ let selectedWoodTextureIndex = 0
 let progress = 0
 let progressDots = 1
 let loadingText
+let qrMenu
+let aRDataArray = [0,0,0,0]
 
 window.onload = () => 
 {
     loadingText = document.getElementById('loading-text')
+    updateProgress()
     ImportManager.execute(importMap, (name, module, progress) => 
     {
         progress = Math.round((progress * 10)/100)
-        updateProgress()
         importMap.set(name, module)
     }, () => load())
 }
@@ -43,7 +45,6 @@ function load()
         loader.addLoader(path, path, new THREE.TextureLoader())
     for (let path of WOOD_ICONS)    
         loader.addLoader(path, path, new THREE.TextureLoader())
-
     let GLTF = importMap.get('GLTF')
     let DRACO = importMap.get('DRACO')
     for (let path in WHITE)
@@ -122,16 +123,23 @@ function load()
         sceneManager.register(rootModel)
         setupRadioButtonAction()
         populateWoodTextureMenu()
-        populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'], FABRIC_ICONS)
-        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'], METAL_ICONS)
+        populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'], FABRIC_ICONS, 0)
+        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'], METAL_ICONS, 1)
         setupAR()
         resizeCanvas()
         initializeRoot()
 
-        let qr = document.getElementById('qr-menu')
+        qrMenu = document.getElementById('qr-menu')
         let crossIcon = document.getElementById('qr-cross')
-        crossIcon.addEventListener('click', () => document.body.removeChild(qr))
-        document.body.removeChild(qr)
+        crossIcon.addEventListener('click', () => 
+        {
+            let qrContainer = document.getElementById('qr-container')
+            let children = qrContainer.children
+            for (let child of children)     
+                qrContainer.removeChild(child)
+            document.body.removeChild(qrMenu)
+        })
+        document.body.removeChild(qrMenu)
         
         isLoading = false
         let loadingScreen = document.getElementById('loading-screen')
@@ -233,6 +241,7 @@ function populateWoodTextureMenu()
                     imgItem.style.borderColor = 'rgb(0, 0, 0)'
             }
             selectedWoodTextureIndex = i
+            aRDataArray[2] = i
         })
         menu.appendChild(img)
         if (i == 0)
@@ -242,11 +251,12 @@ function populateWoodTextureMenu()
             for (let wood of woodenMeshes)
                 wood.material.map = texture
             selectedWoodTextureIndex = 0
+            aRDataArray[2] = 0
         }
     }
 }
 
-function populateMenu(colorMenu, types, dataArray)
+function populateMenu(colorMenu, types, dataArray, arDataIndex)
 {
     let whiteItem = document.createElement('img')
     whiteItem.className = 'color-item'
@@ -262,6 +272,7 @@ function populateMenu(colorMenu, types, dataArray)
         }
         whiteItem.style.borderColor = 'rgb(0, 163, 255)'
         blackItem.style.borderColor = 'rgb(0, 0, 0)'
+        aRDataArray[arDataIndex] = 1
     })
     whiteItem.style.borderColor = 'rgb(0, 163, 255)'
     colorMenu.appendChild(whiteItem)
@@ -279,7 +290,9 @@ function populateMenu(colorMenu, types, dataArray)
         }
         whiteItem.style.borderColor = 'rgb(0, 0, 0)'
         blackItem.style.borderColor = 'rgb(0, 163, 255)'
+        aRDataArray[arDataIndex] = 0
     })
+    aRDataArray[arDataIndex] = 1
     colorMenu.appendChild(blackItem)
 }
 
@@ -326,6 +339,8 @@ function moveHandleAndPillow(dx)
         let blackPillow = ASSETS.get(BLACK['pillow'])
         blackPillow.setRotation(ENGINE.Maths.toRadians(-180), ENGINE.Maths.toRadians(-90), ENGINE.Maths.toRadians(-180))
         blackPillow.setPosition(-0.3, 0, 0.225)
+
+        aRDataArray[3] = 1
     }
     else if (dx < 0)
     {    
@@ -342,6 +357,8 @@ function moveHandleAndPillow(dx)
         let blackPillow = ASSETS.get(BLACK['pillow'])
         blackPillow.setRotation(0, 0, 0)
         blackPillow.setPosition(0, 0, 0)
+
+        aRDataArray[3] = 0
     }
 }
 
@@ -363,12 +380,30 @@ function setupAR()
 {
     let arButton = document.getElementById('ar-container')
     arButton.addEventListener('click', async (e) => {
-        let arMessage = document.getElementById('ar-message')
-        let message = 'Exporting model'
-        arMessage.innerText = message
-        isReadyForAr = false
-        updateARStatus(message, 0)
-        setTimeout(openInAR, 500)
+        if (ENGINE.Misc.isHandHeldDevice())
+        {
+            let arMessage = document.getElementById('ar-message')
+            let message = 'Exporting model'
+            arMessage.innerText = message
+            isReadyForAr = false
+            updateARStatus(message, 0)
+            setTimeout(openInAR, 500)
+        }
+        else
+        {
+            let data = 0
+            let lasti = aRDataArray.length - 1
+            for (let i=lasti; i>=0; i--)
+                data += aRDataArray[i] * Math.pow(10, lasti - i)
+
+
+            document.body.appendChild(qrMenu)
+            let qr = document.createElement('div')
+            qr.id = 'qr'
+            let qrContainer = document.getElementById('qr-container')
+            qrContainer.appendChild(qr)
+            new QRCode(qr, window.location.origin + '/ar.html?d='+data)
+        }
     })
 }
 

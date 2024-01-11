@@ -1,0 +1,202 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <style>
+            #loading-screen
+            {
+                position: absolute;
+                top: 0%;
+                left: 0%;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                background-color: #F8FBFB;
+            }
+
+            #loading-text-container
+            {
+                position: absolute;
+                top: 40%;
+                width: 100%;
+            }
+
+            #loading-text
+            {
+                font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+                font-size: 5vh;
+                text-align: center;
+            }
+
+            #ar-button
+            {
+                background-color: rgb(255, 255, 255);
+                background-image: url("assets/ar.png");
+                background-size: 48px 48px;
+                border-color: rgba(0, 0, 0, 0);;
+                position: absolute;
+                top: 0%;
+                right: 1%;
+                width: 48px;
+                height: 48px;
+            }
+        </style>
+        <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+        <script type="module">
+            import { ImportManager } from '../../engine/ImportManager.js'
+            import { BLACK, WHITE, WOOD_ICONS } from './data.js'
+            let loadingText, progress = 0, progressDots = 1, isLoading = true
+            const dataArray = []
+            const importMap = new Map()
+            importMap.set('THREE', '../node_modules/three/src/Three.js')
+            importMap.set('GLTF','../node_modules/three/examples/jsm/loaders/GLTFLoader.js')
+            importMap.set('DRACO','../node_modules/three/examples/jsm/loaders/DRACOLoader.js')
+            importMap.set('ENGINE','./Engine.js')
+            window.onload = () => 
+            {
+                const NUMBERS = 4
+                const queryString = window.location.search
+                if (queryString != undefined)
+                {
+                    const urlParams = new URLSearchParams(queryString)
+                    let data = urlParams.get('d')
+                    if (data != undefined)
+                    {
+                        let dataNum = parseInt(data)
+                        let limit = 1
+                        for (let p=NUMBERS - 1; p>=0; p--)
+                        {
+                            let tens = Math.pow(10, p)
+                            limit += 9 * tens
+                        }
+                        if (!isNaN(dataNum) && dataNum < limit)
+                        {
+                            for (let p=NUMBERS - 1; p>=0; p--)
+                            {
+                                let max = Math.pow(10, p)
+                                let value = Math.trunc(dataNum/max)
+                                dataArray.push(value)
+                                dataNum -= max * value
+                            }
+                            loadingText = document.getElementById('loading-text')
+                            updateProgress()
+                            ImportManager.execute(importMap, (n,m,p) => 
+                            {
+                                progress = Math.round((progress * 10)/100)
+                                importMap.set(n, m)
+                            }, () => load())
+                        }
+                        else
+                            alert('Invalid data.')
+                    }
+                }
+            }
+
+            function load()
+            {
+                let GLTF = importMap.get('GLTF')
+                let DRACO = importMap.get('DRACO')
+                let THREE = importMap.get('THREE')
+                let ENGINE = importMap.get('ENGINE')
+                let CONSTANTS = importMap.get('CONSTANTS')
+                let modelTypes = ['bed', 'frame', 'handle', 'pillow']
+                let loader = new ENGINE.AssetLoader()
+                for (let i=0; i<modelTypes.length; i++)
+                {    
+                    let dracoLoader = new DRACO.DRACOLoader()
+                    dracoLoader.setDecoderPath(ENGINE.DRACO_DECODER_PATH)
+                    let gltfLoader = new GLTF.GLTFLoader()
+                    gltfLoader.setDRACOLoader(dracoLoader)
+                    let data = 1
+                    if (modelTypes[i] == 'bed' || modelTypes[i] == 'pillow')
+                        data = dataArray[0]
+                    else if (modelTypes[i] == 'frame' || modelTypes[i] == 'handle')
+                        data = dataArray[1]
+                    loader.addLoader(modelTypes[i], (data < 1) ? BLACK[modelTypes[i]] : WHITE[modelTypes[i]], gltfLoader)
+                }
+                let woodTexIndex = dataArray[2]
+                if (woodTexIndex >= WOOD_ICONS.length)
+                    woodTexIndex = 0
+                loader.addLoader('wood', WOOD_ICONS[woodTexIndex], new THREE.TextureLoader())
+                loader.execute(p => 
+                {
+                    let status = Math.round((p * 90)/100)
+                    status += 10 
+                    progress = (status <= 100)? status : 100
+                }, assetMap => 
+                {
+                    let THREE = importMap.get('THREE')
+                    let ENGINE = importMap.get('ENGINE')
+                    let GLTF = importMap.get('GLTF')
+                    let DRACO = importMap.get('DRACO')
+                    let rootModel = new ENGINE.SceneObject('Root')
+                    for (let type of modelTypes)
+                    {
+                        let model = new ENGINE.MeshModel(type, assetMap.get(type), true)
+                        rootModel.attach(model)
+                        if (type == 'handle')
+                        {
+                            let wood = model.getMesh('merida-daybed-armrest-wood001')
+                            let texture = assetMap.get('wood')
+                            let img = texture.source.data
+                            Promise.all([createImageBitmap(img, 0, 0, img.width, img.height)]).then(sprites => texture.source.data = sprites[0])
+                            wood.material.map = texture
+                            if (dataArray[3] > 0)
+                                model.setPosition(0, 0, -0.64)
+                        }
+                        else if (type == 'pillow' && dataArray[3] > 0)
+                        {
+                            model.setRotation(ENGINE.Maths.toRadians(-180), ENGINE.Maths.toRadians(-90), ENGINE.Maths.toRadians(-180))
+                            model.setPosition(-0.3, 0, 0.225) 
+                        }    
+                    }
+                    ENGINE.ModelHelpers.generateUrlForModel(rootModel.scene, url =>
+                    {
+                        let modelViewer = document.querySelector('model-viewer')
+                        modelViewer.src = url
+                        let arButton = document.getElementById('ar-button')
+                        arButton.addEventListener('click', e => modelViewer.activateAR())
+                        isLoading = false
+                        let loadingScreen = document.getElementById('loading-screen')
+                        document.body.removeChild(loadingScreen)
+                    })
+                })
+            }
+
+            function updateProgress()
+            {
+                let message = 'LOADING'
+                for (let i=0; i<progressDots; i++)
+                    message += '.'
+                let spaces = 3 - progressDots
+                for (let i=0; i<spaces; i++)
+                    message += '&nbsp'
+                progressDots++
+                if (progressDots > 3)
+                    progressDots = 1
+                if (progress < 10)
+                    message += '&nbsp&nbsp&nbsp&nbsp&nbsp'+progress+'%'
+                else if (progress > 9 && progress < 100)
+                    message += '&nbsp&nbsp&nbsp'+progress+'%'
+                else
+                    message += '&nbsp'+progress+'%'
+                loadingText.innerHTML = message
+                if (isLoading)
+                    setTimeout(updateProgress, 100)
+            }
+        </script>
+    </head>
+    <body>
+        <model-viewer
+            disable-tap
+            camera-controls
+            touch-action="pan-y"
+            ar 
+            ar-scale="fixed"
+            shadow-intensity="1" 
+            shadow-softness="1"
+            style="width: 100%; height: 100%;">
+            <button slot="ar-button" id="ar-button"></button>
+        </model-viewer>
+        <div id="loading-screen"><div id="loading-text-container"><p id="loading-text">LOADING...&nbsp&nbsp&nbsp&nbsp&nbsp0%</p></div></div>
+    </body>
+</html>
