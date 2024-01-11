@@ -183,10 +183,6 @@
         display: block;
         margin: auto;
         width: 75%;
-        border-radius: 1.5ch;
-        border-width: 0.25ch;
-        border-style: solid;
-        border-color: rgb(232, 117, 36);
         user-select: none;
     }
 }
@@ -198,10 +194,6 @@
         display: block;
         margin: auto;
         height: 100%;
-        border-radius: 1.5ch;
-        border-width: 0.25ch;
-        border-style: solid;
-        border-color: rgb(232, 117, 36);
         user-select: none;
     }
 }
