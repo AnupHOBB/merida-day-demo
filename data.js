@@ -16,3 +16,5 @@ export const WHITE =
 
 export const WOOD_TEXTURES = ['assets/textures/wood/1.png', 'assets/textures/wood/3051_25.png', 'assets/textures/wood/walnut2.png', 'assets/textures/wood/wood_03.png']
 export const WOOD_ICONS = ['assets/icons/wood/1.jpg', 'assets/icons/wood/3051_25.png', 'assets/icons/wood/walnut2.jpeg', 'assets/icons/wood/wood_03.jpg']
+export const FABRIC_ICONS = ['assets/icons/white/fabric.png', 'assets/icons/black/fabric.png']
+export const METAL_ICONS = ['assets/icons/white/metal.png', 'assets/icons/black/metal.png']

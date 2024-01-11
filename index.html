@@ -1,6 +1,7 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <link rel="stylesheet" href="qr.css"/>
         <link rel="stylesheet" href="index-portrait.css"/>
         <link rel="stylesheet" href="index-landscape.css"/>
         <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
@@ -58,6 +59,13 @@
             style="width: 0%; height: 0%;">
             <button slot="ar-button" id="ar-button"></button>
         </model-viewer>
+        <div id="qr-menu">
+            <div id="qr-menu-inner">
+                <p id="qr-title">SCAN THE QR CODE TO VIEW IN YOUR PHONE</p>
+                <div id="qr-container"><div id="qr"></div></div>
+                <p id="qr-cross" class="cross-icon">X</p>
+            </div>
+        </div>
         <div id="loading-screen"><div id="loading-text-container"><p id="loading-text">LOADING...&nbsp&nbsp&nbsp&nbsp&nbsp0%</p></div></div>
     </body>
 </html>

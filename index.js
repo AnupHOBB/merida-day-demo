@@ -1,5 +1,5 @@
 import { ImportManager } from './engine/ImportManager.js'
-import { BLACK, WHITE, WOOD_TEXTURES, WOOD_ICONS } from './data.js'
+import { BLACK, WHITE, WOOD_TEXTURES, WOOD_ICONS, FABRIC_ICONS, METAL_ICONS } from './data.js'
 
 let importMap = new Map()
 importMap.set('THREE', '../node_modules/three/src/Three.js')
@@ -122,11 +122,17 @@ function load()
         sceneManager.register(rootModel)
         setupRadioButtonAction()
         populateWoodTextureMenu()
-        populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'])
-        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'])
+        populateMenu(document.getElementById('menu-fabric'), ['bed', 'pillow'], FABRIC_ICONS)
+        populateMenu(document.getElementById('menu-metal'), ['handle', 'frame'], METAL_ICONS)
         setupAR()
         resizeCanvas()
         initializeRoot()
+
+        let qr = document.getElementById('qr-menu')
+        let crossIcon = document.getElementById('qr-cross')
+        crossIcon.addEventListener('click', () => document.body.removeChild(qr))
+        document.body.removeChild(qr)
+        
         isLoading = false
         let loadingScreen = document.getElementById('loading-screen')
         document.body.removeChild(loadingScreen)
@@ -240,11 +246,12 @@ function populateWoodTextureMenu()
     }
 }
 
-function populateMenu(colorMenu, types)
+function populateMenu(colorMenu, types, dataArray)
 {
-    let whiteItem = document.createElement('div')
+    let whiteItem = document.createElement('img')
     whiteItem.className = 'color-item'
     whiteItem.style.backgroundColor = '#FFFFFF'
+    whiteItem.src = dataArray[0]
     whiteItem.addEventListener('click', e => {
         for (let type of types)
         {
@@ -258,9 +265,10 @@ function populateMenu(colorMenu, types)
     })
     whiteItem.style.borderColor = 'rgb(0, 163, 255)'
     colorMenu.appendChild(whiteItem)
-    let blackItem = document.createElement('div')
+    let blackItem = document.createElement('img')
     blackItem.className = 'color-item'
     blackItem.style.backgroundColor = '#000000'
+    blackItem.src = dataArray[1]
     blackItem.addEventListener('click', e => {
         for (let type of types)
         {
@@ -343,6 +351,10 @@ function rotateModel(dx, dy)
     {
         yaw += dx * 0.5
         pitch -= dy * 0.5
+        if (pitch < -5)
+            pitch = -5
+        if (pitch > 5)
+            pitch = 5
         rootModel.setRotation(0, ENGINE.Maths.toRadians(yaw), ENGINE.Maths.toRadians(pitch))
     }
 }
