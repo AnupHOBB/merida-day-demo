@@ -400,9 +400,19 @@ function setupAR()
             qr.id = 'qr'
             let qrContainer = document.getElementById('qr-container')
             qrContainer.appendChild(qr)
-            new QRCode(qr, window.location.origin + '/ar.html?d='+data)
+            let origin = extractOrigin(window.location.href)
+            new QRCode(qr, origin + '/ar.html?d='+data)
         }
     })
+}
+
+function extractOrigin(url)
+{
+    let urlParts = url.split('/')
+    let origin = urlParts[0]
+    for (let i=1; i<urlParts.length-1; i++)
+        origin += '/' + urlParts[i] 
+    return origin
 }
 
 function updateARStatus(message, dots)
