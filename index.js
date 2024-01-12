@@ -395,8 +395,6 @@ function setupAR()
             let lasti = aRDataArray.length - 1
             for (let i=lasti; i>=0; i--)
                 data += aRDataArray[i] * Math.pow(10, lasti - i)
-
-
             document.body.appendChild(qrMenu)
             let qr = document.createElement('div')
             qr.id = 'qr'
