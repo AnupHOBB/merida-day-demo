@@ -85,10 +85,19 @@
                                 importMap.set(n, m)
                             }, () => load())
                         }
-                        else
-                            alert('Invalid data.')
+                        else    
+                            showErrorMessage('Not Allowed. Please redirect from '+window.location.origin)
                     }
+                    else
+                        showErrorMessage('Not Allowed. Please redirect from '+window.location.origin)
                 }
+
+            }
+
+            function showErrorMessage(message)
+            {
+                loadingText = document.getElementById('loading-text')
+                loadingText.innerHTML = message
             }
 
             function load()
