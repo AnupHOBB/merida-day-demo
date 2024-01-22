@@ -82,12 +82,10 @@ function load()
         sceneManager.enableFXAA(true)
         let ambientLight = new ENGINE.AmbientLight('AmbientLight', new THREE.Color(1, 1, 1), 0.5)
         sceneManager.register(ambientLight)
-
         let directLight = new ENGINE.DirectLight('DirectLight', new THREE.Color(1, 1, 1), 0.5)
         directLight.setPosition(2, 1, 2)
         directLight.setLookAt(0, 0.25, 0)
         sceneManager.register(directLight)
-
         let input = new ENGINE.InputManager('Input')
         input.registerLMBMoveEvent(rotateModel)
         input.registerTouchMoveEvent(rotateModel)
