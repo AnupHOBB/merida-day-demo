@@ -39,7 +39,7 @@ export class SceneRenderer
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping
         this.renderer.toneMappingExposure = 1
-        //this.renderer.setPixelRatio(window.innerWidth/window.innerHeight)
+        this.renderer.setPixelRatio(window.devicePixelRatio)
         this.bloomObjects = []
         this.mainSceneObjects = []
         this.dataMap = new Map()
@@ -96,7 +96,6 @@ export class SceneRenderer
     {
         this.width = width
         this.height = height
-        //this.renderer.setPixelRatio(1)//(this.width/this.height)
     }
 
     /**
