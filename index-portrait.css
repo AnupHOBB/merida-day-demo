@@ -79,6 +79,7 @@
         position: absolute;
         top: 1%;
         right: 1%;
+        user-select: none;
     }
 
     div#ar-button
@@ -113,6 +114,7 @@
         padding-top: 1vh;
         padding-bottom: 1vh;
         background-color: rgb(255, 255, 255);
+        user-select: none;
     }
 
     div#side-bar-container

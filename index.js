@@ -367,9 +367,15 @@ function moveHandleAndPillow(dx)
     }
 }
 
-function rotateModel(dx, dy)
+function rotateModel(dx, dy, x, y)
 {
-    if (rootModel != undefined)
+    let canvas = document.getElementById('scene')
+    let domRect = canvas.getClientRects()[0]
+    let minX = domRect.x
+    let minY = domRect.y
+    let maxX = domRect.x + domRect.width
+    let maxY = domRect.y + domRect.height
+    if (rootModel != undefined && x > minX && x < maxX && y > minY && y < maxY)
     {
         yaw += dx * 0.5
         pitch -= dy * 0.5
