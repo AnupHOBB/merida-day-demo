@@ -38,6 +38,33 @@
         left: 5%;
         border-radius: 2ch;
     }
+    
+    @keyframes rotation-hint-anim 
+    {
+        0% { left: 45%; }
+        10% { left: 44%; }
+        20% { left: 43%; }
+        30% { left: 44%; }
+        40% { left: 45%; }
+        50% { left: 46%; }
+        60% { left: 47%; }
+        70% { left: 48%; }
+        80% { left: 47%; }
+        90% { left: 46%; }
+        100% { left: 45%; }
+    }
+
+    img#rotation-hint
+    {
+        position: absolute;
+        top: 30%;
+        left: 45%;
+        width: 10vh;
+        animation-name: rotation-hint-anim;
+        animation-duration: 2.5s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
 
     p#ar-message
     {

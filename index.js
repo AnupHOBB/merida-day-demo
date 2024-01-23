@@ -24,6 +24,7 @@ let progressDots = 1
 let loadingText
 let qrMenu
 let aRDataArray = [0,0,0,0]
+let hasRemovedRotationHint = false
 
 window.onload = () => 
 {
@@ -377,6 +378,8 @@ function rotateModel(dx, dy)
         if (pitch > 5)
             pitch = 5
         rootModel.setRotation(0, ENGINE.Maths.toRadians(yaw), ENGINE.Maths.toRadians(pitch))
+        if (!hasRemovedRotationHint)
+            removeRotationHintIcon()
     }
 }
 
@@ -477,4 +480,11 @@ function updateProgress()
     loadingText.innerHTML = message
     if (isLoading)
         setTimeout(updateProgress, 100)
+}
+
+function removeRotationHintIcon()
+{
+    let rotationHint = document.getElementById('rotation-hint')
+    rotationHint.style.visibility = 'hidden'
+    hasRemovedRotationHint = true
 }
