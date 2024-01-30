@@ -17,4 +17,4 @@ export { SceneObject, SceneObjectGroup, SceneManager } from './core/SceneManager
 export { DebugUI } from './DebugUI.js'
 export { AnistropicLightingMaterial } from './materials/AnistropicLightingMaterial.js'
 
-export const DRACO_DECODER_PATH = '../node_modules/three/examples/jsm/libs/draco/'
+export const DRACO_DECODER_PATH = window.location.href + 'node_modules/three/examples/jsm/libs/draco/'
